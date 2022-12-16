@@ -6,7 +6,7 @@ import os
 import imutils
 import time
 import Bot_telegram
-
+#aaaaaaaaa
 fecha = time.ctime()
 fecha = fecha.split()
 dia = fecha[0]+"_"+fecha[1]+"_"+fecha[2]+"_"+fecha[4]
