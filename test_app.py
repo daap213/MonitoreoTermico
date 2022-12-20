@@ -27,6 +27,9 @@ def guardar_captura(ventana2):
         count =  referencia()  
         cv2.imwrite(Datos + "/image" + str(count) + ".jpg", ventana2)
         print("Guardo captura")
+        #imagen = open(Datos+ "/image" + str(count) + ".jpg", 'rb')
+        #Bot_telegram.imagen_telegram(imagen,"image" + str(count) + ".jpg")
+        print("Enviando imagen")
 
 def reconocimientoObj(ventana):
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
