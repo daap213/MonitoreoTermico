@@ -2,10 +2,8 @@ import tkinter as tk
 import tkinter.font as fnt
 from PIL import Image
 from PIL import ImageTk
-import numpy as np
 import cv2
 import os
-import imutils
 import time
 import Bot_telegram
 
@@ -14,6 +12,7 @@ fecha = fecha.split()
 dia = fecha[0]+"_"+fecha[1]+"_"+fecha[2]+"_"+fecha[4]
 path = os.getcwd()
 Datos = path+'/'+dia
+estado = "Inicio"
 clasificador = cv2.CascadeClassifier('cascade.xml')
 def referencia():
     A = time.ctime()
@@ -47,23 +46,27 @@ def reconocimientoObj(ventana):
 
 def monitoreoAuto():
     global captura
-    
+    global estado
+    if not estado == "Inicio":
+        boton.invoke()
+        
     if seleccionado.get() == 1:
         btnRadio1.configure(state="disabled")
         btnRadio2.configure(state="active")
-        boton.configure(state="active")
+        estado = "uno"
     if seleccionado.get() == 2:
-        btnRadio1.configure(state="disabled")
+        btnRadio1.configure(state="active")
         btnRadio2.configure(state="disabled")
-        boton.configure(state="disabled")
+        estado = "dos"
     
+    boton.configure(state="active")
     btnRadio3.configure(state="active")
     captura = cv2.VideoCapture(0) 
     visualizarVideo()
     
 def VideoTermo():
     captura.release()
-    boton.configure(state="disabled")
+    boton.configure(state="active")
     btnRadio2.configure(state="active")
     btnRadio1.configure(state="active")
     btnRadio3.configure(state="disabled")
@@ -74,10 +77,10 @@ def visualizarVideo():
     global captura
     ret, ventana = captura.read()
     if ret == True:
-        ventana = imutils.resize(ventana, width=640, height=480)
+        ventana = cv2.resize(ventana, (640, 480)) 
         if seleccionado.get() == 1:
             ventana = reconocimientoObj(ventana)
-        else:
+        if seleccionado.get() == 2:
             ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
         im = Image.fromarray(ventana)
         img = ImageTk.PhotoImage(image=im)
@@ -87,37 +90,37 @@ def visualizarVideo():
 
 
 def finalizarYLimpiar():
+    seleccionado.set(0)
+    captura.release()
+    cv2.destroyAllWindows()
     lblVideo.configure(image=fondo)
     lblVideo.image = fondo
-    seleccionado.set(0)
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
     btnRadio3.configure(state="active")
-    captura.release()
-    cv2.destroyAllWindows()
     Bot_telegram.mensaje_telegram("Analisando capturas")
 
 captura = None
 
 root = tk.Tk()
-tamaño = fnt.Font(size = 15)
+tamaño = fnt.Font(size = 12)
 root.title("Monitoreo Térmico")
 seleccionado = tk.IntVar()
 lblVideo = tk.Label(root)
 lblVideo.grid(column=0, row=0, columnspan=10,rowspan=40)
 boton = tk.Button(root, text="Ver resultados",bd = '5',font = tamaño, state="active", command=finalizarYLimpiar)
-boton.grid(column=0, row=42, columnspan=10, pady=5)
+boton.grid(column=0, row=42, columnspan=10, pady=3)
 
 btnRadio1 = tk.Radiobutton(root, text="Automático", variable=seleccionado,
-                        bd = '5',value = 1, indicator = 0,
+                        bd = '3',value = 1, indicator = 0,
                         font = tamaño, state="active", command=monitoreoAuto)
 btnRadio1.grid(column=0, row=0,sticky ="NWE")
 btnRadio2 = tk.Radiobutton(root, text="Cámara normal", variable=seleccionado,
-                        bd = '5',value = 2, indicator = 0,
+                        bd = '3',value = 2, indicator = 0,
                         font = tamaño, state="active", command=monitoreoAuto)
 btnRadio2.grid(column=1, row=0,sticky ="NWE")
 btnRadio3 = tk.Radiobutton(root, text="Cámara térmica", variable=seleccionado,
-                        bd = '5',value = 3, indicator = 0,
+                        bd = '3',value = 3, indicator = 0,
                         font = tamaño, state="active", command=VideoTermo)
 btnRadio3.grid(column=2, row=0,sticky ="NWE")
 image = cv2.imread(path+"/happy.png")
@@ -147,4 +150,3 @@ root.mainloop()
             ruta_video_entrada = "..." + ruta_video[20:]
             lblInformacionRutaVideo.configure(text=ruta_video_entrada)
             captura = cv2.VideoCapture(ruta_video) """
-#if seleccionado.get() == 1:
