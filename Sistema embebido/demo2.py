@@ -67,19 +67,19 @@ def VideoTermo():
     btnRadio2.configure(state="disabled")
     lblVideo.configure(image=fondo2)
     lblVideo.image = fondo2
-    #Imagen_ref = 
     
 def verResultado():
     seleccionado.set(0)
     captura.release()
     cv2.destroyAllWindows()
-    lblVideo.configure(image=fondo)
-    lblVideo.image = fondo
     boton.configure(state="disabled")
     boton2.configure(state="disabled")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
+    lblVideo.configure(image=fondo)
+    lblVideo.image = fondo
     Bot_telegram.mensaje_telegram("Analisando capturas")
+    
 
 def visualizarVideo():
     global captura
@@ -96,6 +96,7 @@ def visualizarVideo():
 
 root = tk.Tk()
 root.title("Monitoreo Térmico")
+root.iconbitmap(default="drone.ico")
 window_width = 640
 window_height = 525
 screen_width = root.winfo_screenwidth()
@@ -125,13 +126,16 @@ btnRadio2 = tk.Radiobutton(root, text="Manual", variable=seleccionado,
                         font = tamaño, state="active", command=VideoTermo)
 btnRadio2.grid(column=1, row=0,sticky ="NWE")
 
-image = cv2.imread(path+"/happy.png")
+image = cv2.imread(path+"/telegram.png")
 image = cv2.resize(image, (640, 480)) 
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 fondo = ImageTk.PhotoImage(image=Image.fromarray(image))
 
-image2 = cv2.imread(path+"/analisis.jpg")
+image2 = cv2.imread(path+"/analisis.png")
 image2 = cv2.resize(image2, (640, 480)) 
 fondo2 = ImageTk.PhotoImage(image=Image.fromarray(image2))
+
+
 #lblVideo.configure(image=fondo)
 #lblVideo.image = fondo
 btnRadio1.invoke()
