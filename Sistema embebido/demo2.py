@@ -12,7 +12,6 @@ fecha = fecha.split()
 dia = fecha[0]+"_"+fecha[1]+"_"+fecha[2]+"_"+fecha[4]
 path = os.getcwd()
 Datos = path+'/'+dia
-estado = "Inicio"
 clasificador = cv2.CascadeClassifier('cascade.xml')
 
 captura = None
@@ -65,8 +64,8 @@ def VideoTermo():
     boton2.configure(state="active")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="disabled")
-    lblVideo.configure(image=fondo2)
-    lblVideo.image = fondo2
+    lblVideo2.configure(image=fondo2)
+    lblVideo2.image = fondo2
     
 def verResultado():
     seleccionado.set(0)
@@ -76,10 +75,9 @@ def verResultado():
     boton2.configure(state="disabled")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
+    Bot_telegram.mensaje_telegram("Analisando capturas",True,2)
     lblVideo.configure(image=fondo)
     lblVideo.image = fondo
-    Bot_telegram.mensaje_telegram("Analisando capturas")
-    
 
 def visualizarVideo():
     global captura
@@ -107,6 +105,10 @@ root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
 
 tamaño = fnt.Font(size = 12)
 seleccionado = tk.IntVar()
+
+lblVideo2 = tk.Label(root)
+lblVideo2.grid(column=2, row=0, columnspan=2,rowspan=40,sticky ="NWES")
+
 lblVideo = tk.Label(root)
 lblVideo.grid(column=0, row=0, columnspan=2,rowspan=40,sticky ="NWES")
 
