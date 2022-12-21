@@ -64,8 +64,8 @@ def VideoTermo():
     boton2.configure(state="active")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="disabled")
-    lblVideo2.configure(image=fondo2)
-    lblVideo2.image = fondo2
+    lblVideo.configure(image=fondo2)
+    lblVideo.image = fondo2
     
 def verResultado():
     seleccionado.set(0)
