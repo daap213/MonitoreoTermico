@@ -13,7 +13,7 @@ dia = fecha[0]+"_"+fecha[1]+"_"+fecha[2]+"_"+fecha[4]
 path = os.getcwd()
 Datos = path+'/'+dia
 clasificador = cv2.CascadeClassifier('cascade.xml')
-
+cantidad = 0
 captura = None
 Imagen_ref = None 
 
@@ -36,12 +36,17 @@ def guardar_captura(ventana2 ):
 
 def reconocimientoObj(ventana):
     global Imagen_ref
+    global cantidad
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
     caras = clasificador.detectMultiScale(gris, 5, 70,minSize=(75,75),maxSize=(350,350))
     ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-    if not (len(caras) == 0):
+    if (not len(caras) == 0) and (cantidad >= 60):
         Imagen_ref = ventana
         guardar_captura(ventana)
+        cantidad = 0
+    else:
+        print(cantidad)
+        cantidad = 1 + cantidad
     return ventana
 
 def capturar():
