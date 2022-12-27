@@ -6,6 +6,8 @@ import cv2
 import os
 import time
 import Bot_telegram
+import AnalisisTermico
+
 
 fecha = time.ctime()
 fecha = fecha.split()
@@ -30,9 +32,6 @@ def guardar_captura(ventana2 ):
         count =  referencia()  
         cv2.imwrite(Datos + "/image" + str(count) + ".jpg", ventana2)
         print("Guardo captura")
-        #imagen = open(Datos+ "/image" + str(count) + ".jpg", 'rb')
-        #Bot_telegram.imagen_telegram(imagen,"image" + str(count) + ".jpg")
-        #print("Enviando imagen")
 
 def reconocimientoObj(ventana):
     global Imagen_ref
@@ -40,12 +39,11 @@ def reconocimientoObj(ventana):
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
     caras = clasificador.detectMultiScale(gris, 5, 70,minSize=(75,75),maxSize=(350,350))
     ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-    if (not len(caras) == 0) and (cantidad >= 60):
-        Imagen_ref = ventana
+    Imagen_ref = ventana
+    if (not len(caras) == 0) and (cantidad >= 30):
         guardar_captura(ventana)
         cantidad = 0
     else:
-        print(cantidad)
         cantidad = 1 + cantidad
     return ventana
 
@@ -81,6 +79,10 @@ def verResultado():
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
     Bot_telegram.mensaje_telegram("Analisando capturas",True,2)
+    #AnalisisTermico.plot_update()
+    #imagen = open(Datos+ "/image" + str(count) + ".jpg", 'rb')
+    #Bot_telegram.imagen_telegram(imagen,"image" + str(count) + ".jpg")
+    #print("Enviando imagen")
     lblVideo.configure(image=fondo)
     lblVideo.image = fondo
 
