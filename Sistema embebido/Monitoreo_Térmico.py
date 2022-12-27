@@ -1,80 +1,96 @@
 import tkinter as tk
+import tkinter.font as fnt
 from PIL import Image
 from PIL import ImageTk
-import numpy as np
 import cv2
 import os
-import imutils
 import time
 import Bot_telegram
+import AnalisisTermico
+
 
 fecha = time.ctime()
 fecha = fecha.split()
 dia = fecha[0]+"_"+fecha[1]+"_"+fecha[2]+"_"+fecha[4]
 path = os.getcwd()
 Datos = path+'/'+dia
-
 clasificador = cv2.CascadeClassifier('cascade.xml')
+cantidad = 0
+captura = None
+Imagen_ref = None 
+
 def referencia():
     A = time.ctime()
     A = A.split()
     hora = A[3].replace(':', '_')
     return hora
 
-def guardar_captura(ventana2):
+def guardar_captura(ventana2 ):
         if not os.path.exists(Datos):
             print('Carpeta creada: ',Datos)
             os.makedirs(Datos)
         count =  referencia()  
         cv2.imwrite(Datos + "/image" + str(count) + ".jpg", ventana2)
         print("Guardo captura")
-        #imagen = open(Datos+ "/image" + str(count) + ".jpg", 'rb')
-        #Bot_telegram.imagen_telegram(imagen,"image" + str(count) + ".jpg")
-        #print("Enviando imagen")
 
 def reconocimientoObj(ventana):
+    global Imagen_ref
+    global cantidad
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
     caras = clasificador.detectMultiScale(gris, 5, 70,minSize=(75,75),maxSize=(350,350))
-    
-    for (x, y, ancho, alto) in caras:
-        cv2.rectangle(ventana, (x, y), (x + ancho, y + alto), (0, 255, 0), 2)
-        cv2.putText(ventana,'Cable',(x,y-10),2,0.7,(0,255,0))
     ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-    if not (len(caras) == 0):
-        ventana2 = ventana
-        guardar_captura(ventana2)
+    Imagen_ref = ventana
+    if (not len(caras) == 0) and (cantidad >= 30):
+        guardar_captura(ventana)
+        cantidad = 0
+    else:
+        cantidad = 1 + cantidad
     return ventana
 
-def videoDeEntrada():
-    global captura
-    """     if seleccionado.get() == 1:
-        boton.configure(state="active")
-        btnRadio1.configure(state="disabled")
-        btnRadio2.configure(state="disabled")
-        lblInformacionRutaVideo.configure(text="")
-        captura = cv2.VideoCapture(1) """
-    """ 
-        ruta_video = filedialog.askopenfilename(filetypes = [
-            ("all video format", ".mp4"),
-            ("all video format", ".avi")])
-        if len(ruta_video) > 0:
-            boton.configure(state="active")
-            btnRadio1.configure(state="disabled")
-            btnRadio2.configure(state="disabled")
-            ruta_video_entrada = "..." + ruta_video[20:]
-            lblInformacionRutaVideo.configure(text=ruta_video_entrada)
-            captura = cv2.VideoCapture(ruta_video) """
-    if seleccionado.get() == 1:
-        boton.configure(state="active")
-        btnRadio1.configure(state="disabled")
-        captura = cv2.VideoCapture(0)
+def capturar():
+    global Imagen_ref
+    guardar_captura(Imagen_ref)
 
+def monitoreoAuto():
+    global captura
+    btnRadio1.configure(state="disabled")
+    boton.configure(state="active")
+    boton2.configure(state="disabled")
+    btnRadio2.configure(state="active")
+    captura = cv2.VideoCapture(0) 
     visualizarVideo()
+    
+def VideoTermo():
+    global Imagen_ref
+    captura.release()
+    boton.configure(state="active")
+    boton2.configure(state="active")
+    btnRadio1.configure(state="active")
+    btnRadio2.configure(state="disabled")
+    lblVideo.configure(image=fondo2)
+    lblVideo.image = fondo2
+    
+def verResultado():
+    seleccionado.set(0)
+    captura.release()
+    cv2.destroyAllWindows()
+    boton.configure(state="disabled")
+    boton2.configure(state="disabled")
+    btnRadio1.configure(state="active")
+    btnRadio2.configure(state="active")
+    Bot_telegram.mensaje_telegram("Analisando capturas",True,2)
+    #AnalisisTermico.plot_update()
+    #imagen = open(Datos+ "/image" + str(count) + ".jpg", 'rb')
+    #Bot_telegram.imagen_telegram(imagen,"image" + str(count) + ".jpg")
+    #print("Enviando imagen")
+    lblVideo.configure(image=fondo)
+    lblVideo.image = fondo
+
 def visualizarVideo():
     global captura
     ret, ventana = captura.read()
     if ret == True:
-        ventana = imutils.resize(ventana, width=640)
+        ventana = cv2.resize(ventana, (640, 480)) 
         ventana = reconocimientoObj(ventana)
         im = Image.fromarray(ventana)
         img = ImageTk.PhotoImage(image=im)
@@ -83,33 +99,52 @@ def visualizarVideo():
         lblVideo.after(10, visualizarVideo)
 
 
-def finalizarYLimpiar():
-    lblVideo.configure(image=fondo)
-    lblVideo.image = fondo
-    lblInformacionRutaVideo.configure(text="")
-    btnRadio1.configure(state="active")
-    seleccionado.set(0)
-    captura.release()
-    Bot_telegram.mensaje_telegram("Analisando capturas")
-
-captura = None
 root = tk.Tk()
 root.title("Monitoreo Térmico")
-lblInformacion1 = tk.Label(root, text="VÍDEO DE ENTRADA", font="bold",width=40)
-lblInformacion1.grid(column=0, row=0, columnspan=2)
+root.iconbitmap(default="drone.ico")
+window_width = 640
+window_height = 525
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+center_x = int(screen_width/2 - window_width / 2)
+center_y = int(screen_height/2 - window_height / 2)
+root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
+
+tamaño = fnt.Font(size = 12)
 seleccionado = tk.IntVar()
-btnRadio1 = tk.Radiobutton(root, text="", value=1, variable=seleccionado, command=videoDeEntrada)
-btnRadio1.grid(column=1, row=0)
-lblInformacionRutaVideo = tk.Label(root, text="", width=20)
-lblInformacionRutaVideo.grid(column=0, row=2)
+
+lblVideo2 = tk.Label(root)
+lblVideo2.grid(column=2, row=0, columnspan=2,rowspan=40,sticky ="NWES")
+
 lblVideo = tk.Label(root)
-lblVideo.grid(column=0, row=3, columnspan=2)
-boton = tk.Button(root, text="Ver resultados", state="active", command=finalizarYLimpiar)
-boton.grid(column=0, row=4, columnspan=2, pady=10)
-image = cv2.imread(path+"/happy.png")
+lblVideo.grid(column=0, row=0, columnspan=2,rowspan=40,sticky ="NWES")
+
+boton = tk.Button(root, text="Ver resultados",bd = '5',font = tamaño, state="active", command=verResultado)
+boton.grid(column=1, row=41, pady=3, sticky ="NWES")
+
+boton2 = tk.Button(root, text="Tomar captura",bd = '5',font = tamaño, state="disabled", command=capturar)
+boton2.grid(column=0,row=41, pady=3,sticky ="NWES")
+
+btnRadio1 = tk.Radiobutton(root, text="Automático", variable=seleccionado,
+                        bd = '3',value = 1, indicator = 0,
+                        font = tamaño, state="active", command=monitoreoAuto)
+btnRadio1.grid(column=0, row=0,sticky ="NWE")
+
+btnRadio2 = tk.Radiobutton(root, text="Manual", variable=seleccionado,
+                        bd = '3',value = 2, indicator = 0,
+                        font = tamaño, state="active", command=VideoTermo)
+btnRadio2.grid(column=1, row=0,sticky ="NWE")
+
+image = cv2.imread(path+"/telegram.png")
+image = cv2.resize(image, (640, 480)) 
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 fondo = ImageTk.PhotoImage(image=Image.fromarray(image))
-image2 = cv2.imread(path+"/analisis.jpg")
+
+image2 = cv2.imread(path+"/analisis.png")
+image2 = cv2.resize(image2, (640, 480)) 
 fondo2 = ImageTk.PhotoImage(image=Image.fromarray(image2))
+
+
 #lblVideo.configure(image=fondo)
 #lblVideo.image = fondo
 btnRadio1.invoke()
