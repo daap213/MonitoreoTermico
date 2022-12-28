@@ -5,8 +5,11 @@ from PIL import ImageTk
 import cv2
 import os
 import time
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
+NavigationToolbar2Tk)
 import Bot_telegram
-import AnalisisTermico
+import pi_therm_cam
 
 
 fecha = time.ctime()
@@ -26,22 +29,27 @@ def referencia():
     return hora
 
 def guardar_captura(ventana2 ):
-        if not os.path.exists(Datos):
-            print('Carpeta creada: ',Datos)
-            os.makedirs(Datos)
-        count =  referencia()  
-        cv2.imwrite(Datos + "/image" + str(count) + ".jpg", ventana2)
-        print("Guardo captura")
+    global Datos
+    if not os.path.exists(Datos):
+        print('Carpeta creada: ',Datos)
+        os.makedirs(Datos)
+    count =  referencia()  
+    cv2.imwrite(Datos + "/image" + str(count) + ".jpg", ventana2)
+    print("Guardo captura")
 
 def reconocimientoObj(ventana):
     global Imagen_ref
     global cantidad
+    global Datos
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
     caras = clasificador.detectMultiScale(gris, 5, 70,minSize=(75,75),maxSize=(350,350))
     ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-    Imagen_ref = ventana
-    if (not len(caras) == 0) and (cantidad >= 30):
-        guardar_captura(ventana)
+    if (not len(caras) == 0) and (cantidad >= 15):
+        thermcam = pi_therm_cam.pithermalcam(output_folder = "")  
+        if(thermcam._temp_max >100):
+            captu = thermcam.get_current_image_frame()
+            Imagen_ref = cv2.resize(captu, (640, 480))
+            guardar_captura(Imagen_ref)
         cantidad = 0
     else:
         cantidad = 1 + cantidad
@@ -58,17 +66,15 @@ def monitoreoAuto():
     boton2.configure(state="disabled")
     btnRadio2.configure(state="active")
     captura = cv2.VideoCapture(0) 
-    visualizarVideo()
     
 def VideoTermo():
-    global Imagen_ref
+    global captura
     captura.release()
+    cv2.destroyAllWindows()
     boton.configure(state="active")
     boton2.configure(state="active")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="disabled")
-    lblVideo.configure(image=fondo2)
-    lblVideo.image = fondo2
     
 def verResultado():
     seleccionado.set(0)
@@ -78,30 +84,54 @@ def verResultado():
     boton2.configure(state="disabled")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
-    Bot_telegram.mensaje_telegram("Analisando capturas",True,2)
-    #AnalisisTermico.plot_update()
-    #imagen = open(Datos+ "/image" + str(count) + ".jpg", 'rb')
-    #Bot_telegram.imagen_telegram(imagen,"image" + str(count) + ".jpg")
-    #print("Enviando imagen")
     lblVideo.configure(image=fondo)
     lblVideo.image = fondo
+    Enviar_telegram()
+
+
+def  Enviar_telegram():
+    global Datos
+    Bot_telegram.mensaje_telegram("Formato: Hora_Minuto_Segundo",True,5)
+    Bot_telegram.mensaje_telegram("Alistando capturas",True,5)
+    files_names = os.listdir(Datos)
+    
+    for file_name in files_names:
+
+        image_path = Datos + "/" + file_name
+        imagen = open(image_path, 'rb')
+        print(imagen)
+        
+        if not(image is None):
+            Bot_telegram.imagen_telegram(imagen,file_name,True,5)
+    Bot_telegram.mensaje_telegram("Finalizado",True,5)
+    
+
 
 def visualizarVideo():
     global captura
+    global Imagen_ref
     ret, ventana = captura.read()
-    if ret == True:
+    
+    if ret == True and seleccionado.get() == 1:
         ventana = cv2.resize(ventana, (640, 480)) 
         ventana = reconocimientoObj(ventana)
-        im = Image.fromarray(ventana)
-        img = ImageTk.PhotoImage(image=im)
-        lblVideo.configure(image=img)
-        lblVideo.image = img
-        lblVideo.after(10, visualizarVideo)
+        
+    if seleccionado.get() == 2 :
+        thermcam = pi_therm_cam.pithermalcam(output_folder = "")  # Instantiate class
+        captu = thermcam.get_current_image_frame()
+        ventana = cv2.resize(captu, (640, 480))
+        Imagen_ref = ventana
+        ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
+    im = Image.fromarray(ventana)
+    img = ImageTk.PhotoImage(image=im)
+    lblVideo.configure(image=img)
+    lblVideo.image = img
+    lblVideo.after(10, visualizarVideo)
 
 
 root = tk.Tk()
 root.title("Monitoreo Térmico")
-root.iconbitmap(default="drone.ico")
+#root.iconbitmap(default="drone.ico")
 window_width = 640
 window_height = 525
 screen_width = root.winfo_screenwidth()
@@ -112,9 +142,6 @@ root.geometry(f'{window_width}x{window_height}+{center_x}+{center_y}')
 
 tamaño = fnt.Font(size = 12)
 seleccionado = tk.IntVar()
-
-lblVideo2 = tk.Label(root)
-lblVideo2.grid(column=2, row=0, columnspan=2,rowspan=40,sticky ="NWES")
 
 lblVideo = tk.Label(root)
 lblVideo.grid(column=0, row=0, columnspan=2,rowspan=40,sticky ="NWES")
@@ -148,5 +175,6 @@ fondo2 = ImageTk.PhotoImage(image=Image.fromarray(image2))
 #lblVideo.configure(image=fondo)
 #lblVideo.image = fondo
 btnRadio1.invoke()
+visualizarVideo()
 Bot_telegram.mensaje_telegram("Empezando")
 root.mainloop()
