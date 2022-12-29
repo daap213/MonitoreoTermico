@@ -5,13 +5,11 @@ from PIL import ImageTk
 import cv2
 import os
 import time
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
-NavigationToolbar2Tk)
 import Bot_telegram
 import pi_therm_cam
 
-
+TempMax = 40
+inicio = time.time()
 fecha = time.ctime()
 fecha = fecha.split()
 dia = fecha[0]+"_"+fecha[1]+"_"+fecha[2]+"_"+fecha[4]
@@ -28,36 +26,40 @@ def referencia():
     hora = A[3].replace(':', '_')
     return hora
 
-def guardar_captura(ventana2 ):
+def guardar_captura(ventana2,temp ):
     global Datos
     if not os.path.exists(Datos):
         print('Carpeta creada: ',Datos)
         os.makedirs(Datos)
     count =  referencia()  
-    cv2.imwrite(Datos + "/image" + str(count) + ".jpg", ventana2)
+    cv2.imwrite(Datos + "/image" + str(count) +"_Temp_ %.2f_.jpg"% temp, ventana2)
     print("Guardo captura")
+
+def capturar():
+    global Imagen_ref
+    thermcam = pi_therm_cam.pithermalcam(output_folder = "")
+    temp = thermcam._temp_max
+    guardar_captura(Imagen_ref,temp)
 
 def reconocimientoObj(ventana):
     global Imagen_ref
     global cantidad
     global Datos
+    global TempMax
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
     caras = clasificador.detectMultiScale(gris, 5, 70,minSize=(75,75),maxSize=(350,350))
     ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
     if (not len(caras) == 0) and (cantidad >= 15):
-        thermcam = pi_therm_cam.pithermalcam(output_folder = "")  
-        if(thermcam._temp_max >100):
+        thermcam = pi_therm_cam.pithermalcam(output_folder = "")
+        temp = thermcam._temp_max
+        if(temp >TempMax):
             captu = thermcam.get_current_image_frame()
             Imagen_ref = cv2.resize(captu, (640, 480))
-            guardar_captura(Imagen_ref)
+            guardar_captura(Imagen_ref,temp)
         cantidad = 0
     else:
         cantidad = 1 + cantidad
     return ventana
-
-def capturar():
-    global Imagen_ref
-    guardar_captura(Imagen_ref)
 
 def monitoreoAuto():
     global captura
@@ -78,23 +80,27 @@ def VideoTermo():
     
 def verResultado():
     seleccionado.set(0)
+    lblVideo.configure(image=fondo)
+    lblVideo.image = fondo
     captura.release()
     cv2.destroyAllWindows()
     boton.configure(state="disabled")
     boton2.configure(state="disabled")
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
-    lblVideo.configure(image=fondo)
-    lblVideo.image = fondo
-    Enviar_telegram()
+    lblVideo.after(10, Enviar_telegram)
 
 
 def  Enviar_telegram():
     global Datos
-    Bot_telegram.mensaje_telegram("Formato: Hora_Minuto_Segundo",True,5)
+    global TempMax
+    Bot_telegram.mensaje_telegram("Fecha: "+dia,True,5)
+    Bot_telegram.mensaje_telegram("Temperatura de reporte: "+str(TempMax)+" ºC",True,5)
+    Bot_telegram.mensaje_telegram("Formato: Hora_Minuto_Segundo__TEMP_C",True,5)
     Bot_telegram.mensaje_telegram("Alistando capturas",True,5)
     files_names = os.listdir(Datos)
-    
+    id_Sticker = "CAACAgIAAxkBAAEHEJdjrhvHpn9_Yn6CbWNm5UdY-7XiQAACoxAAAvF3qEh-OxgSw5fVQSwE"
+
     for file_name in files_names:
 
         image_path = Datos + "/" + file_name
@@ -102,31 +108,44 @@ def  Enviar_telegram():
         print(imagen)
         
         if not(image is None):
+            name = file_name.split("_")
+            tem = name[-2]
+            tem = float(tem)            
+            if tem > TempMax:
+                Bot_telegram.stiker_telegram(id_Sticker, True,5)                
             Bot_telegram.imagen_telegram(imagen,file_name,True,5)
-    Bot_telegram.mensaje_telegram("Finalizado",True,5)
-    
 
+    Bot_telegram.mensaje_telegram("Finalizado",True,5)
+    root.destroy()
+    #os.system("shutdown now -h")
 
 def visualizarVideo():
     global captura
     global Imagen_ref
-    ret, ventana = captura.read()
-    
-    if ret == True and seleccionado.get() == 1:
-        ventana = cv2.resize(ventana, (640, 480)) 
-        ventana = reconocimientoObj(ventana)
+    global inicio
+    actual = time.time()
+    img = fondo
+    if (actual-inicio)<=900:
+        ret, ventana = captura.read()
         
-    if seleccionado.get() == 2 :
-        thermcam = pi_therm_cam.pithermalcam(output_folder = "")  # Instantiate class
-        captu = thermcam.get_current_image_frame()
-        ventana = cv2.resize(captu, (640, 480))
-        Imagen_ref = ventana
-        ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-    im = Image.fromarray(ventana)
-    img = ImageTk.PhotoImage(image=im)
-    lblVideo.configure(image=img)
-    lblVideo.image = img
-    lblVideo.after(10, visualizarVideo)
+        if ret == True and seleccionado.get() == 1:
+            ventana = cv2.resize(ventana, (640, 480)) 
+            ventana = reconocimientoObj(ventana)
+            im = Image.fromarray(ventana)
+            
+        if seleccionado.get() == 2 :
+            thermcam = pi_therm_cam.pithermalcam(output_folder = "")  # Instantiate class
+            captu = thermcam.get_current_image_frame()
+            ventana = cv2.resize(captu, (640, 480))
+            Imagen_ref = ventana
+            ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
+            im = Image.fromarray(ventana)
+        img = ImageTk.PhotoImage(image=im)
+        lblVideo.configure(image=img)
+        lblVideo.image = img
+        lblVideo.after(10, visualizarVideo)
+    else:
+        verResultado()
 
 
 root = tk.Tk()
