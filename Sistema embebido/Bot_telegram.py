@@ -59,3 +59,24 @@ def imagen_telegram(image,text="", reconectar=False,intentos =10):
             print(e)
             return "Error"
     return "Enviado"
+
+def stiker_telegram(id_Stiker, reconectar=False,intentos =10):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(5)
+    try:
+        s.connect(("www.google.com", 80))
+    except (socket.gaierror, socket.timeout):
+        print("Sin conexión a internet")
+        s.close()
+        return "Error"
+    else:
+        print("Con conexión a internet")
+        s.close()
+        
+        apiURL =  f'https://api.telegram.org/bot{apiToken}/sendSticker?chat_id={chatID}&sticker={id_Stiker}'
+        try:
+            response = requests.post(apiURL)
+        except Exception as e:
+            print(e)
+            return "Error"
+    return "Enviado"
