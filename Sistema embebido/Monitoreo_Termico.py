@@ -94,6 +94,7 @@ def verResultado():
 def  Enviar_telegram():
     global Datos
     global TempMax
+    Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExhjrwgfvrsgKcUruOs42gVuVYzJYwACzgEAAqLNVzOBFRaZmhALYS0E",True,5) 
     Bot_telegram.mensaje_telegram("Fecha: "+dia,True,5)
     Bot_telegram.mensaje_telegram("Temperatura de reporte: "+str(TempMax)+" ºC",True,5)
     Bot_telegram.mensaje_telegram("Formato: Hora_Minuto_Segundo__TEMP_C",True,5)
@@ -151,7 +152,6 @@ def visualizarVideo():
 
 root = tk.Tk()
 root.title("Monitoreo Térmico")
-#root.iconbitmap(default="drone.ico")
 window_width = 640
 window_height = 525
 screen_width = root.winfo_screenwidth()
@@ -191,11 +191,6 @@ image2 = cv2.imread(path+"/analisis.png")
 image2 = cv2.resize(image2, (640, 480)) 
 fondo2 = ImageTk.PhotoImage(image=Image.fromarray(image2))
 
-
-#lblVideo.configure(image=fondo)
-#lblVideo.image = fondo
 btnRadio1.invoke()
 visualizarVideo()
-Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExhjrwgfvrsgKcUruOs42gVuVYzJYwACzgEAAqLNVzOBFRaZmhALYS0E", True,5) 
-Bot_telegram.mensaje_telegram("Empezando")
 root.mainloop()
