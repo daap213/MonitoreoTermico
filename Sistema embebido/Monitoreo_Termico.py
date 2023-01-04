@@ -99,7 +99,7 @@ def  Enviar_telegram():
     Bot_telegram.mensaje_telegram("Formato: Hora_Minuto_Segundo__TEMP_C",True,5)
     Bot_telegram.mensaje_telegram("Alistando capturas",True,5)
     files_names = os.listdir(Datos)
-    id_Sticker = "CAACAgIAAxkBAAEHEJdjrhvHpn9_Yn6CbWNm5UdY-7XiQAACoxAAAvF3qEh-OxgSw5fVQSwE"
+    id_Sticker = "CAACAgEAAxkBAAEHIEVjtexuKURTLHyhb4sCYh4FkJ5KgwACrAIAAv4jsUUxMtwZpLKnIi0E"
 
     for file_name in files_names:
 
@@ -116,6 +116,7 @@ def  Enviar_telegram():
             Bot_telegram.imagen_telegram(imagen,file_name,True,5)
 
     Bot_telegram.mensaje_telegram("Finalizado",True,5)
+    Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExxjrwg_kQa4l7enT1avpvjqtW_H_QACQAADmfh7JbCahlhKF3gsLQQ", True,5) 
     root.destroy()
     #os.system("shutdown now -h")
 
@@ -195,5 +196,6 @@ fondo2 = ImageTk.PhotoImage(image=Image.fromarray(image2))
 #lblVideo.image = fondo
 btnRadio1.invoke()
 visualizarVideo()
+Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExhjrwgfvrsgKcUruOs42gVuVYzJYwACzgEAAqLNVzOBFRaZmhALYS0E", True,5) 
 Bot_telegram.mensaje_telegram("Empezando")
 root.mainloop()
