@@ -90,7 +90,6 @@ def verResultado():
     btnRadio2.configure(state="active")
     lblVideo.after(10, Enviar_telegram)
 
-
 def  Enviar_telegram():
     global Datos
     global TempMax
@@ -119,6 +118,7 @@ def  Enviar_telegram():
     Bot_telegram.mensaje_telegram("Finalizado",True,5)
     Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExxjrwg_kQa4l7enT1avpvjqtW_H_QACQAADmfh7JbCahlhKF3gsLQQ", True,5) 
     root.destroy()
+    #time.sleep(5)
     #os.system("shutdown now -h")
 
 def visualizarVideo():
