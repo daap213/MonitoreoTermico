@@ -8,7 +8,7 @@ import time
 import Bot_telegram
 import pi_therm_cam
 
-TempMax = 40
+TempMax = 20
 inicio = time.time()
 fecha = time.ctime()
 fecha = fecha.split()
@@ -26,20 +26,28 @@ def referencia():
     hora = A[3].replace(':', '_')
     return hora
 
-def guardar_captura(ventana2,temp ):
+def guardar_captura(ventana1,ventana2,temp ):
     global Datos
     if not os.path.exists(Datos):
         print('Carpeta creada: ',Datos)
         os.makedirs(Datos)
-    count =  referencia()  
-    cv2.imwrite(Datos + "/image" + str(count) +"_Temp_ %.2f_.jpg"% temp, ventana2)
+    count =  referencia()
+    ventana1 = cv2.cvtColor(ventana1, cv2.COLOR_BGR2RGB)
+    ventana = cv2.vconcat([ventana1, ventana2])
+    cv2.imwrite(Datos + "/image_" + str(count) +"_Temp_ %.2f_.jpg"% temp, ventana)
     print("Guardo captura")
 
 def capturar():
     global Imagen_ref
+    global captura
     thermcam = pi_therm_cam.pithermalcam(output_folder = "")
     temp = thermcam._temp_max
-    guardar_captura(Imagen_ref,temp)
+    ret, ventana = captura.read()
+    
+    if ret == True :
+        ventana = cv2.resize(ventana, (640, 480))
+        ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
+    guardar_captura(ventana,Imagen_ref,temp)
 
 def reconocimientoObj(ventana):
     global Imagen_ref
@@ -49,13 +57,13 @@ def reconocimientoObj(ventana):
     gris = cv2.cvtColor(ventana, cv2.COLOR_BGR2GRAY)
     caras = clasificador.detectMultiScale(gris, 5, 70,minSize=(75,75),maxSize=(350,350))
     ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-    if (not len(caras) == 0) and (cantidad >= 15):
+    if (not len(caras) == 0) and (cantidad >= 20):
         thermcam = pi_therm_cam.pithermalcam(output_folder = "")
         temp = thermcam._temp_max
         if(temp >TempMax):
             captu = thermcam.get_current_image_frame()
             Imagen_ref = cv2.resize(captu, (640, 480))
-            guardar_captura(Imagen_ref,temp)
+            guardar_captura(ventana,Imagen_ref,temp)
         cantidad = 0
     else:
         cantidad = 1 + cantidad
@@ -70,9 +78,6 @@ def monitoreoAuto():
     captura = cv2.VideoCapture(0) 
     
 def VideoTermo():
-    global captura
-    captura.release()
-    cv2.destroyAllWindows()
     boton.configure(state="active")
     boton2.configure(state="active")
     btnRadio1.configure(state="active")
@@ -89,6 +94,7 @@ def verResultado():
     btnRadio1.configure(state="active")
     btnRadio2.configure(state="active")
     lblVideo.after(10, Enviar_telegram)
+
 
 def  Enviar_telegram():
     global Datos
@@ -118,7 +124,6 @@ def  Enviar_telegram():
     Bot_telegram.mensaje_telegram("Finalizado",True,5)
     Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExxjrwg_kQa4l7enT1avpvjqtW_H_QACQAADmfh7JbCahlhKF3gsLQQ", True,5) 
     root.destroy()
-    #time.sleep(5)
     #os.system("shutdown now -h")
 
 def visualizarVideo():
@@ -133,15 +138,14 @@ def visualizarVideo():
         if ret == True and seleccionado.get() == 1:
             ventana = cv2.resize(ventana, (640, 480)) 
             ventana = reconocimientoObj(ventana)
-            im = Image.fromarray(ventana)
             
         if seleccionado.get() == 2 :
-            thermcam = pi_therm_cam.pithermalcam(output_folder = "")  # Instantiate class
+            thermcam = pi_therm_cam.pithermalcam(output_folder = "") 
             captu = thermcam.get_current_image_frame()
             ventana = cv2.resize(captu, (640, 480))
             Imagen_ref = ventana
             ventana = cv2.cvtColor(ventana, cv2.COLOR_BGR2RGB)
-            im = Image.fromarray(ventana)
+        im = Image.fromarray(ventana)
         img = ImageTk.PhotoImage(image=im)
         lblVideo.configure(image=img)
         lblVideo.image = img
