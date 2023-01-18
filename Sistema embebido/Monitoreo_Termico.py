@@ -18,7 +18,12 @@ Datos = path+'/'+dia
 clasificador = cv2.CascadeClassifier('cascade.xml')
 cantidad = 0
 captura = cv2.VideoCapture(0) 
-Imagen_ref = None 
+Imagen_ref = None
+ 
+def tempMax_chance(valor):
+    global TempMax
+    TempMax == int(valor)
+    visualizarVideo()
 
 def referencia():
     A = time.ctime()
