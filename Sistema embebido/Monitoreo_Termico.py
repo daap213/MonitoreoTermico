@@ -17,9 +17,9 @@ path = "/home/piDrone/Desktop/App"
 Datos = path+'/'+dia
 clasificador = cv2.CascadeClassifier('/home/piDrone/Desktop/App/cascade.xml')
 cantidad = 0
-time.sleep(3)
+time.sleep(5)
 captura = cv2.VideoCapture(0)
-time.sleep(3)
+time.sleep(5)
 Imagen_ref = None 
 window_width = 640
 window_height = 420
@@ -168,7 +168,7 @@ def  Enviar_telegram():
     captura.release()
     cv2.destroyAllWindows()
     root.destroy()
-    #os.system("shutdown now -h")
+    os.system("shutdown now -h")
 
 def visualizarVideo():
     global captura
