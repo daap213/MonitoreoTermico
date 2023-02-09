@@ -1,10 +1,10 @@
 import requests
 import socket
 import time
+import credenciales_bot
 
-
-apiToken = '5858757321:AAFPFv5JkG6MfDWgzKLg1Su6DXT6KWVRAPM'
-chatID = '-1001685279523'
+apiToken = credenciales_bot.apitoken
+chatID = credenciales_bot.chatID
 
 def mensaje_telegram(mensaje, reconectar=False,intentos =10):
     estado = "espera"
