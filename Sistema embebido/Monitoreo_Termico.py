@@ -39,7 +39,8 @@ def tempMax_chance():
 def referencia():
     A = time.ctime()
     A = A.split()
-    hora = A[3].replace(':', '_')
+    A = A[3].split(':')
+    hora = "Hora_"+A[0]+"_Min_"+A[1]+"_Seg_"+A[2]
     return hora
 
 def guardar_captura(ventana1,ventana2,temp ):
@@ -50,7 +51,7 @@ def guardar_captura(ventana1,ventana2,temp ):
     count =  referencia()
     ventana1 = cv2.cvtColor(ventana1, cv2.COLOR_BGR2RGB)
     ventana = cv2.vconcat([ventana1, ventana2])
-    cv2.imwrite(Datos + "/image_" + str(count) +"_Temp_ %.2f_.jpg"% temp, ventana)
+    cv2.imwrite(Datos + "/" + count +"_Temp_ %.2f_.jpg"% temp, ventana)
     print("Guardo captura")
 
 def capturar():
@@ -98,9 +99,6 @@ def monitoreoAuto():
     time.sleep(1)
     
 def VideoTermo():
-    #global captura
-    #captura.release()
-    #cv2.destroyAllWindows()
     global boton
     global boton2
     global btnRadio1
@@ -138,12 +136,12 @@ def  Enviar_telegram():
     global captura
     global root
     global image
+    
     Bot_telegram.stiker_telegram("CAACAgEAAxkBAAEHExhjrwgfvrsgKcUruOs42gVuVYzJYwACzgEAAqLNVzOBFRaZmhALYS0E",True,5) 
     Bot_telegram.mensaje_telegram("Fecha: "+dia,True,5)
     Bot_telegram.mensaje_telegram("Temperatura de reporte: "+str(TempMax)+" ºC",True,5)
     Bot_telegram.mensaje_telegram("Formato: Hora_Minuto_Segundo__TEMP_C",True,5)
     Bot_telegram.mensaje_telegram("Alistando capturas",True,5)
-    #files_names = os.listdir(Datos)
     id_Sticker = "CAACAgEAAxkBAAEHIEVjtexuKURTLHyhb4sCYh4FkJ5KgwACrAIAAv4jsUUxMtwZpLKnIi0E"
     list_of_files = filter( lambda x: os.path.isfile(os.path.join(Datos, x)),
                         os.listdir(Datos) )
