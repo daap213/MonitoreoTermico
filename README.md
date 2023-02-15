@@ -7,6 +7,10 @@ Programas para detectar presencia de cables, capturar imágenes térmicas y dete
 
 _Links_
 
+### Diseño 3D Final:
+
+![image](https://user-images.githubusercontent.com/69557269/218906007-ecb4d9ca-ca6f-4be4-a69e-7e83236af2b3.png)
+
 ### Videos de prueba:
 [App monitoreo térmico](https://www.canva.com/design/DAFX9yXkbVk/DF8M5vSArvJTF0_a-fzVag/watch?utm_content=DAFX9yXkbVk&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink) -- Prueba de funcionamiento
 
